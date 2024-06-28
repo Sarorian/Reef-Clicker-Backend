@@ -55,6 +55,10 @@ app.post(
           Users.create({
             Username: req.body.Username,
             Password: hashedPassword,
+            Inventory: { fish: [], bubbles: [] },
+            Pearls: 0,
+            Upgrades: [],
+            Achievements: [],
           })
             .then((user) => {
               res.status(201).json(user);
