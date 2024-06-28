@@ -6,7 +6,9 @@ app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 const mongoose = require("mongoose"),
   Models = require("./models.js"),
-  Users = Models.User;
+  Users = Models.User,
+  Lifes = Models.Life,
+  Regions = Models.Region;
 const { check, validationResult } = require("express-validator");
 app.use(bodyParser.json());
 
