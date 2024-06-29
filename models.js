@@ -70,7 +70,10 @@ const lifeSchema = mongoose.Schema({
     ],
     default: "Common",
   },
-  Value: { type: Number, default: 0 }, // Value in pearls
+  Value: { type: Number, default: 0 },
+  MaxSize: { type: Number, required: true },
+  MinSize: { type: Number, required: true },
+  ScientificName: { type: String, required: true },
 });
 
 const regionSchema = new mongoose.Schema({
@@ -91,7 +94,7 @@ userSchema.methods.validatePassword = function (password) {
 
 // Define User model
 const User = mongoose.model("User", userSchema);
-const Life = mongoose.model("Life", lifeSchema);
+const Life = mongoose.model("Life", lifeSchema, "lifes");
 const Region = mongoose.model("Region", regionSchema);
 
 module.exports.User = User;

@@ -1,5 +1,6 @@
 const jwtSecret = "your_jwt_secret"; // This has to be the same key used in the JWTStrategy
 
+const { updateRegionsWithLife } = require("./functions");
 const jwt = require("jsonwebtoken"),
   passport = require("passport");
 
@@ -7,9 +8,9 @@ require("./passport"); // Your local passport file
 
 let generateJWTToken = (user) => {
   return jwt.sign(user, jwtSecret, {
-    subject: user.Username, // This is the username you’re encoding in the JWT
-    expiresIn: "7d", // This specifies that the token will expire in 7 days
-    algorithm: "HS256", // This is the algorithm used to “sign” or encode the values of the JWT
+    subject: user.Username,
+    expiresIn: "7d",
+    algorithm: "HS256",
   });
 };
 
@@ -22,28 +23,39 @@ module.exports = (router) => {
    * @param {string} req.body.password - The password of the user.
    * @returns {object} JSON object containing user details and authentication token.
    */
-  router.post("/login", (req, res) => {
-    passport.authenticate("local", { session: false }, (error, user, info) => {
-      console.log(user);
-      if (error) {
-        console.log(error);
-        return res.status(400).json({
-          message: "There is an error",
-          user: user,
-        });
-      } else if (!user) {
-        return res.status(400).json({
-          message: "User does not exist",
-          user: user,
+  router.post("/login", async (req, res) => {
+    passport.authenticate(
+      "local",
+      { session: false },
+      async (error, user, info) => {
+        if (error) {
+          return res.status(400).json({
+            message: "There is an error",
+            user: user,
+          });
+        }
+        if (!user) {
+          return res.status(400).json({
+            message: "User does not exist",
+            user: user,
+          });
+        }
+
+        req.login(user, { session: false }, async (error) => {
+          if (error) {
+            return res.status(500).json({ message: "Login error" });
+          }
+
+          let token = generateJWTToken(user.toJSON());
+          try {
+            await updateRegionsWithLife(); // Update regions with lives on login
+            res.status(200).json({ user, token }); // Send response only once
+          } catch (error) {
+            console.error("Error updating regions:", error);
+            res.status(500).json({ message: "Error updating regions" });
+          }
         });
       }
-      req.login(user, { session: false }, (error) => {
-        if (error) {
-          res.send(error);
-        }
-        let token = generateJWTToken(user.toJSON());
-        return res.json({ user, token });
-      });
-    })(req, res);
+    )(req, res);
   });
 };

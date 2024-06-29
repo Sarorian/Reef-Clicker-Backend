@@ -1,4 +1,5 @@
 require("dotenv").config();
+
 const express = require("express"),
   bodyParser = require("body-parser"),
   axios = require("axios");
@@ -13,7 +14,12 @@ const { check, validationResult } = require("express-validator");
 app.use(bodyParser.json());
 
 const cors = require("cors");
-let allowedOrigins = ["http://localhost:3000"];
+let allowedOrigins = [
+  "http://localhost:3000",
+  "file:///C:/Users/shamo/lifeInputPage/index.html",
+  null,
+  "null",
+];
 
 app.use(
   cors({
@@ -77,6 +83,89 @@ app.post(
       });
   }
 );
+
+app.post("/regions", (req, res) => {
+  Regions.findOne({ Name: req.body.Name })
+    .then((region) => {
+      if (region) {
+        return res.status(400).send(req.body.Name + " already exists");
+      } else {
+        Regions.create({
+          Name: req.body.Name,
+          Description: req.body.Description,
+          Lifes: [],
+        })
+          .then((region) => {
+            res.status(201).json(region);
+          })
+          .catch((error) => {
+            console.error(error);
+            res.status(500).send("Error: " + error);
+          });
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Error: " + error);
+    });
+});
+
+app.post("/lifes", (req, res) => {
+  const {
+    Name,
+    Region,
+    Type,
+    Description,
+    Rarity,
+    Value,
+    MaxSize,
+    MinSize,
+    ScientificName,
+  } = req.body;
+
+  Lifes.findOne({ Name })
+    .then((life) => {
+      if (life) {
+        return res.status(400).send(Name + " already exists");
+      } else {
+        Regions.findOne({ Name: Region })
+          .then((region) => {
+            if (!region) {
+              return res
+                .status(400)
+                .send("Region " + Region + " does not exist");
+            } else {
+              Lifes.create({
+                Name,
+                Region: region._id,
+                Type,
+                Description,
+                Rarity,
+                Value,
+                MaxSize,
+                MinSize,
+                ScientificName,
+              })
+                .then((life) => {
+                  res.status(201).json(life);
+                })
+                .catch((error) => {
+                  console.error(error);
+                  res.status(500).send("Error: " + error);
+                });
+            }
+          })
+          .catch((error) => {
+            console.error(error);
+            res.status(500).send("Error: " + error);
+          });
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+      res.status(500).send("Error: " + error);
+    });
+});
 
 const connectDB = async () => {
   try {
